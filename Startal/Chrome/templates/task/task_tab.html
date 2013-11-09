@@ -1,0 +1,188 @@
+<div id="jobsViewer">
+{% if all_tasks %}
+  <ul class="startal_selectable">
+  {% for task in all_tasks %}
+    <li class="startal_unselected">
+      <img class="task_get" src="{{task.roi.static_image_url}}"
+          alt="{{task.id}}: {{task.sar_data.name}} &mdash; Centered at {{ task.roi.center_point }}" />
+      <input type="hidden" name="task_url" value="{{task.output_kmz.name}}" />
+      <input type="hidden" name="task_sar_data_id"
+        value="{{task.sar_data.id}}" />
+      <input type="hidden" name="task_roi_id"
+        value="{{task.roi.id}}" />
+      <input type="hidden" name="task_elevation_id"
+        value="{{task.elevation_data.id}}" />
+      <input type="hidden" name="task_algorithm_type"
+        value="{{task.model}}" />
+      <input type="hidden" name="task_algorithm_flags"
+        value="{{task.flags}}" />
+      <div class="startal_caption">{{task.model}}</div>
+      <div class="startal_caption">{{task.sar_data.name}}</div>
+    </li>
+  {% endfor %}
+  </div>
+  <div style="clear: both;"></div>
+{% else %}
+  <p>No tasks in queue.</p>
+{% endif %}
+  <h5 class="add_task">Add Processing Task</h5>
+</div>
+<script type="text/javascript">
+
+function showTask(event)
+{
+  set_selection($(this));
+
+  var task_url = $(this).siblings("input[name='task_url']").attr('value');
+  showKMZ(TaskData, 'kmz_files/'+task_url+'/');
+  var sar_data_id
+    = $(this).siblings("input[name='task_sar_data_id']").attr('value');
+  var roi_id
+    = $(this).siblings("input[name='task_roi_id']").attr('value');
+  var elevation_id
+    = $(this).siblings("input[name='task_elevation_id']").attr('value');
+  var algorithm_type
+    = $(this).siblings("input[name='task_algorithm_type']").attr('value');
+  var algorithm_flags
+    = $(this).siblings("input[name='task_algorithm_flags']").attr('value');
+  showAddTaskForm(sar_data_id, roi_id, algorithm_type, elevation_id,
+      algorithm_flags);
+  event.preventDefault();
+}
+
+function removeTask(event)
+{
+  var taskId = $(this).siblings("input[name='taskId']").attr('value');
+  $.ajax({url: 'http://localhost:8000/remove_task/'+taskId+'/',
+          success: function(a,b,c) {
+            var idx = $('div.dataViewer').tabs('option', 'selected');
+            $('div.dataViewer').tabs('load', idx);
+          },});
+  event.preventDefault();
+}
+
+function showAddTaskForm(sar_data_id, roi_id, algorithm_type, elevation_id,
+    algorithm_flags)
+{
+  var taskForm = $('.add_task');
+  var task_add_form = '<fieldset class="add_task">'
+    + '<div id="process_field">'
+    + '  <h3>Processing Task Values:</h3>'
+    + '  <fieldset>'
+    + '    <label for="task_sar_data">Sar Data:</label>'
+    + '    <select id="task_sar_data">'
+{% for sar_data in sar_data_list %}
+    + '      <option value="{{ sar_data.id }}" '
+    + ((sar_data_id == '{{sar_data.id}}') ? 'selected="selected"' : '')
+    + ' >{{sar_data.name}}</option>'
+{% endfor %}
+    + '    </select>'
+    + '    <div>'
+    + '    <label>Region of Interest:</label>'
+    + '    <div style="clear: both;"></div>'
+
+    var wasFound = false;
+{% for roi in roi_list %}
+  task_add_form += '<div class="task_roi ';
+  if(roi_id == '{{roi.id}}')
+    task_add_form += 'task_roi_selected';
+  else
+    task_add_form += 'task_roi_unselected';
+
+  task_add_form += '"><img src="{{roi.static_image_url_small}}" '
+    + 'alt="{{roi.id}}" />'
+    + '<input name="task_roi_id" type="hidden" value="{{roi.id}}" /></div>';
+{% endfor %}
+    task_add_form += '</div><div style="clear: both;"></div>'
+    + '    <div><label for="task_algorithm">Algorithm:</label>'
+    + '    <select id="task_algorithm">'
+{% for algorithm in algorithm_list %}
+    + '     <option '
+    + ((algorithm_type == '{{algorithm}}') ? 'selected="selected"' : '')
+    + ' >{{ algorithm }}</option>'
+{% endfor %}
+    + '    </select></div>'
+    + '    <div><label for="task_elevation">Elevation:</label>'
+    + '    <select id="task_elevation">'
+{% for elevation in elevation_list %}
+    + '      <option value="{{ elevation.id }}" '
+    + ((elevation_id == '{{elevation.id}}') ? 'selected="selected"' : '')
+    + ' >{{elevation.name}}</option>'
+{% endfor %}
+    + '    </select></div>'
+    + '    <div id="task_flags"></div>'
+    + '    <input id="task_submit" type="submit" value="Create Task" />'
+    + '  </fieldset>';
+  taskForm.replaceWith(task_add_form);
+  $('.task_roi').click(changeRoi);
+  $('#task_submit').click(addTask);
+  $('#task_algorithm').change(function(event)
+    {
+      showAlgorithmParams($(this), algorithm_flags);
+    });
+  //Trigger this event for the current selection
+  $('#task_algorithm').change();
+}
+
+function changeRoi(event)
+{
+  $('.task_roi_selected').addClass('task_roi_unselected');
+  $('.task_roi_selected').removeClass('task_roi_selected');
+  $(this).addClass('task_roi_selected');
+  $(this).removeClass('task_roi_unselected');
+}
+
+function addTask(event)
+{
+  var roi;
+  if($('.task_roi_selected'))
+  {
+    roi = $('.task_roi_selected').children("input[name='task_roi_id']").attr(
+        'value');
+  }
+  var sar_data = $('#task_sar_data').attr('value');
+  var algorithm = $('#task_algorithm').attr('value');
+  var flags = $('#actual_task_flags').attr('value');
+  var elevation = $('#task_elevation').attr('value');
+  $.ajax({url: 'http://localhost:8000/add_task/' + sar_data + '/' + roi + '/' + elevation + ';;;;' + algorithm + ';;;;' + flags + '/',
+          success: function(a,b,c) {
+            var idx = $('div.dataViewer').tabs('option', 'selected');
+            $('div.dataViewer').tabs('load', idx);
+          },});
+  event.preventDefault();
+}
+
+function showAlgorithmParams(elem, flags)
+{
+  var sar_data_id = $('#task_sar_data').attr('value');
+  var elevation_id = $('#task_elevation').attr('value');
+  var algorithm_type = elem.attr('value');
+
+  $.ajax({url: 'http://localhost:8000/get_algorithm_params/' + sar_data_id
+      + '/' + elevation_id + '/' + algorithm_type + '/',
+      success: function(data,b,c)
+      {
+        $('#task_flags').replaceWith('<div id="task_flags"><p>'
+          + '<span class="computer" style="white-space: pre">'
+          + data + '</span><textarea id="actual_task_flags">'
+          + flags + '</textarea></p>');
+      }});
+}
+
+var TaskData;
+if(!TaskData)
+  TaskData = { dataLink: false };
+
+$(function() 
+{
+  $('a.task_remove').click(removeTask);
+  $('.task_get').click(showTask);
+  $('.add_task').click(function(event)
+    {
+      showAddTaskForm('', '', '', '', '');
+      event.preventDefault();
+    });
+
+}); 
+
+</script>

@@ -1,0 +1,5 @@
+include(../../functions.cmake)
+add_sarry_link_directories(${CMAKE_SOURCE_DIR})
+add_executable(SrtmTest SrtmTestMain.cpp SrtmTest.cpp)
+target_link_libraries(SrtmTest Geo Srtm Utility)
+add_sarry_test(SrtmTest)

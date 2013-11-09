@@ -1,0 +1,27 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<kml xmlns="http://www.opengis.net/kml/2.2">
+  <Document>
+  <NetworkLinkControl>
+    <maxSessionLength>0</maxSessionLength>
+  </NetworkLinkControl>
+  <Placemark>
+    <name>{{ roi.id }}</name>
+      <LinearRing>
+        <tessellate>1</tessellate>
+        <coordinates>
+{{ roi.ulLon }},{{ roi.ulLat }}
+{{ roi.urLon }},{{ roi.urLat }}
+{{ roi.lrLon }},{{ roi.lrLat }}
+{{ roi.llLon }},{{ roi.llLat }}
+{{ roi.ulLon }},{{ roi.ulLat }}
+        </coordinates>
+      </LinearRing>
+      <Style>
+        <LineStyle>
+          <color>#550000ff</color>
+          <width>5</width>
+        </LineStyle>
+      </Style>
+  </Placemark>
+  </Document>
+</kml>

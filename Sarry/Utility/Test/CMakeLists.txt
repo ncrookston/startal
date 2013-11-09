@@ -1,0 +1,5 @@
+include(../../functions.cmake)
+add_sarry_link_directories(${CMAKE_SOURCE_DIR})
+add_executable(UtilityTest EndianTest.cpp PacketTest.cpp UtilityTest.cpp)
+target_link_libraries(UtilityTest Utility)
+add_sarry_test(UtilityTest)

@@ -1,0 +1,124 @@
+<div id="collectionViewer">
+  {% if elevation_list %}
+    <ul>
+    {% for elevation in elevation_list %}
+      <li>
+        <span class="show_elevation">{{ elevation.name }}</span>
+        <a class="remove_elevation" href="#">remove</a>
+        <input name="elev_id" type="hidden" value="{{elevation.id}}" />
+        <input name="elev_name" type="hidden" value="{{elevation.name}}" />
+        <input name="elev_model" type="hidden" value="{{elevation.model}}" />
+        <input name="elev_flags" type="hidden" value="{{elevation.flags}}" />
+      </li>
+    {% endfor %}
+    </ul>
+  {% else %}
+    <p>No elevation types created.</p>
+  {%endif%}
+    <h5 class="add_elevation">Add Elevation Data</h5>
+</div>
+<script type="text/javascript">
+
+function showAddElevationForm(name, model, flags)
+{
+  var elevationForm = $('.add_elevation');
+  var optString = '';
+{% if elevation_types %}
+  {% for elevation in elevation_types %}
+    optString += '    <option ';
+    if(model == '{{elevation}}')
+      optString += 'selected="selected" ';
+    optString += ' >{{ elevation }}</option>';
+  {% endfor %}
+
+  elevationForm.replaceWith('<fieldset class="add_elevation">'
+    + '<p><label for="elevation_name">Name of Elevation Data</label>'
+    + '  <input id="elevation_name" type="text" value="' + name + '" /></p>'
+    + '<p><label for="elevation_type">Underlying Data Source</label>'
+    + '  <select id="elevation_type">'
+    + optString
+    + '  </select></p>'
+    + '<div id="elevation_flags"></div>'
+    + '<p><input id="elevation_data_submit" type="submit" value="Add" /></p>'
+    + '</fieldset>');
+{% else %}
+    <p>No Elevation Types Registered.</p>
+{% endif %}
+  $('#elevation_data_submit').click(addElevationData);
+  $('#elevation_type').change(function(event) { showElevationParams(event, $(this), flags); });
+  //Trigger this event for the current selection
+  $('#elevation_type').change();
+}
+
+function showElevationParams(event, elem, flags)
+{
+  var elevation_type = elem.attr('value');
+
+  $.ajax({url: 'http://localhost:8000/get_elevation_params/' + elevation_type
+      + '/',
+      success: function(data,b,c)
+      {
+        $('#elevation_flags').replaceWith('<div id="elevation_flags"><p>'
+          + '<span class="computer" style="white-space: pre">'
+          + data + '</span></p><textarea id="actual_elevation_flags">'
+          + flags + '</textarea>');
+      }});
+}
+
+function addElevationData(event)
+{
+  var name = $('#elevation_name').attr('value');
+  var type = $('#elevation_type').attr('value');
+  var flags = $('#actual_elevation_flags').attr('value');
+  $.ajax({url: 'http://localhost:8000/add_elevation_data/' + name  + ';;;;'
+      + type + ';;;;' + flags + '/',
+          success: function(a,b,c) {
+            var idx = $('div.dataViewer').tabs('option', 'selected');
+            $('div.dataViewer').tabs('load', idx);
+          },});
+  event.preventDefault();
+}
+
+function addElevationData(event)
+{
+  var name = $('#elevation_name').attr('value');
+  var type = $('#elevation_type').attr('value');
+  var flags = $('#actual_elevation_flags').attr('value');
+  $.ajax({url: 'http://localhost:8000/add_elevation_data/' + name  + ';;;;'
+      + type + ';;;;' + flags + '/',
+          success: function(a,b,c) {
+            var idx = $('div.dataViewer').tabs('option', 'selected');
+            $('div.dataViewer').tabs('load', idx);
+          },});
+  event.preventDefault();
+}
+
+function removeElevation(event)
+{
+  var elev_id = $(this).siblings("input[name='elev_id']").attr('value');
+  $.ajax({url: 'http://localhost:8000/remove_elevation/'+ elev_id +'/',
+          success: function(a,b,c) {
+            var idx = $('div.dataViewer').tabs('option', 'selected');
+            $('div.dataViewer').tabs('load', idx);
+          },});
+  event.preventDefault();
+}
+
+$(function()
+{
+  $('.add_elevation').click(function(event)
+    {
+      showAddElevationForm('', '', '');
+      event.preventDefault();
+    });
+  $('a.remove_elevation').click(removeElevation);
+  $('span.show_elevation').click(function(event)
+    {
+      var name = $(this).siblings("input[name='elev_name']").attr('value');
+      var model = $(this).siblings("input[name='elev_model']").attr('value');
+      var flags = $(this).siblings("input[name='elev_flags']").attr('value');
+      showAddElevationForm(name, model, flags);
+    });
+}); 
+
+</script>

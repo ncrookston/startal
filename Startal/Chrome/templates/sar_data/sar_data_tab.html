@@ -1,0 +1,134 @@
+<div id="collectionViewer">
+  {% if sar_data_list %}
+    <ul>
+    {% for sar_data in sar_data_list %}
+      <li>
+        <a class="src_get" href="#">{{ sar_data.name }}</a>
+        <a class="remove_sar_data subLinks" href="#">remove</a>
+        <input name="sar_data_id" type="hidden" value="{{sar_data.id}}" />
+        <input name="sar_data_url" type="hidden"
+          value="{{sar_data.overview_kmz.name}}" />
+        <input name="sar_data_name" type="hidden" value="{{sar_data.name}}" />
+        <input name="sar_data_antenna_model" type="hidden"
+          value="{{sar_data.model}}" />
+        <input name="sar_data_antenna_flags" type="hidden"
+          value="{{sar_data.flags}}" />
+      </li>
+    {% endfor %}
+    </ul>
+  {% else %}
+    <p>No SAR data registered.</p>
+  {%endif%}
+    <h5 class="add_sar_data">Add SAR data</h5>
+</div>
+<script type="text/javascript">
+
+function addSarData(event)
+{
+  var name = $('#sar_data_name').attr('value');
+  var type = $('#sar_antenna_type').attr('value');
+  var flags = $('#actual_antenna_flags').attr('value');
+  var elevation_id = $('#sar_data_elevation_type').attr('value');
+  $.ajax({url: 'http://localhost:8000/add_sar_data/' + name  + ';;;;'
+      + type + ';;;;' + flags + ';;;;' + elevation_id + '/',
+          success: function(a,b,c) {
+            var idx = $('div.dataViewer').tabs('option', 'selected');
+            $('div.dataViewer').tabs('load', idx);
+          },});
+  event.preventDefault();
+}
+
+function showAddSarDataForm(name, antenna_model, antenna_flags)
+{
+  var sarForm = $('.add_sar_data');
+  sarForm.replaceWith('<fieldset class="add_sar_data">'
+{% if antenna_list %}
+    + '<p><label for="sar_data_name">Name or description of SAR Data</label>'
+    + '  <input id="sar_data_name" type="text" style="width: 80%" value="'
+    + name + '" /></p>'
+    + '<p><label for="sar_data_elevation_type">Elevation data to use for summary generation</label>'
+    + '  <select id="sar_data_elevation_type">'
+  {% for elevation in elevation_list %}
+    + '    <option value="{{elevation.id}}">{{elevation.name}}</option>'
+  {% endfor %}
+    + '  </select></p>'
+    + '<p><label for="sar_antenna_type">Type and Mounting of Antenna</label>'
+    + '  <select id="sar_antenna_type">'
+  {% for antenna in antenna_list %}
+    + '    <option '
+    + ((antenna_model == '{{antenna}}') ? 'selected="selected"' : '')
+    + ' >{{ antenna }}</option>'
+  {% endfor %}
+    + '  </select></p>'
+    + '<div id="sar_antenna_flags"></div>'
+{% else %}
+    <p>No Antenna Types Registered.</p>
+{% endif %}
+    + '<p><input id="sar_data_submit" type="submit" value="Add" /></p>'
+    + '</fieldset>');
+  $('#sar_data_submit').click(addSarData);
+  $('#sar_antenna_type').change(function(event)
+    {
+      showAntennaParams($(this), antenna_flags);
+    });
+  //Trigger this event for the current selection
+  $('#sar_antenna_type').change();
+}
+
+function showSrc(event)
+{
+  var sar_data_kmz
+    = $(this).siblings("input[name='sar_data_url']").attr('value');
+  var name = $(this).siblings("input[name='sar_data_name']").attr('value');
+  var antenna_model
+    = $(this).siblings("input[name='sar_data_antenna_model']").attr('value');
+  var antenna_flags
+    = $(this).siblings("input[name='sar_data_antenna_flags']").attr('value');
+  showAddSarDataForm(name, antenna_model, antenna_flags);
+  showKMZ(SarData, 'kmz_files/'+sar_data_kmz +'/');
+  event.preventDefault();
+}
+
+function showAntennaParams(elem, flags)
+{
+  var antenna_type = elem.attr('value');
+  var elevation_id = $('#sar_data_elevation_type').attr('value');
+
+  $.ajax({url: 'http://localhost:8000/get_antenna_params/' + antenna_type
+      + '/' + elevation_id + '/',
+      success: function(data,b,c)
+      {
+        $('#sar_antenna_flags').replaceWith('<div id="sar_antenna_flags"><p>'
+          + '<span class="computer" style="white-space: pre">'
+          + data + '</span></p><textarea id="actual_antenna_flags">'
+          + flags + '</textarea>');
+      }});
+}
+
+function removeSarData(event)
+{
+  var sar_data_id = $(this).siblings("input[name='sar_data_id']").attr('value');
+  $.ajax({url: 'http://localhost:8000/remove_sar_data/'+ sar_data_id +'/',
+          success: function(a,b,c) {
+            var idx = $('div.dataViewer').tabs('option', 'selected');
+            $('div.dataViewer').tabs('load', idx);
+          },});
+  event.preventDefault();
+}
+
+var SarData;
+if(!SarData)
+  SarData = { dataLink: false };
+
+$(function()
+{
+  $('a.src_get').click(showSrc);
+  $('.add_sar_data').click(function(event)
+    {
+      showAddSarDataForm('', '', '');
+      event.preventDefault();
+    });
+  $('a.remove_sar_data').click(removeSarData);
+}); 
+
+</script>

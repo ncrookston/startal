@@ -1,0 +1,5 @@
+include(../../functions.cmake)
+add_sarry_link_directories(${CMAKE_SOURCE_DIR})
+add_executable(GeoTest GeoTestMain.cpp testConverter.cpp)
+target_link_libraries(GeoTest GeographicLib Geo Utility)
+add_sarry_test(GeoTest)

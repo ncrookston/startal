@@ -1,0 +1,4 @@
+#Not to be released open-source
+Sdl
+#Build directories should have a leading underscore
+_*

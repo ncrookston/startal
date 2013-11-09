@@ -1,0 +1,5 @@
+*.pyc
+#Directory where the Sarry and PrintTypes executables are found.
+# It should also contain a subdirectory dlls which has DLLs containing
+# algorithms, elevation models, and antenna models.
+Sarry/

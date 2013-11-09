@@ -1,0 +1,82 @@
+<html>
+<head>
+  <title>STARTAL -- Sarry!</title>
+  <script src="site_media/js/jquery-1.4.2.min.js" type="text/javascript"></script>
+  <script src="http://www.google.com/jsapi?key=ABQIAAAAeshX5ClcO5M93PyBrm8c_xQCULP4XOMyhPd8d_NrQQEO8sT8XBTYTI2DUlSEn5KJiLh8BIGHd3zu8A" type="text/javascript"></script>
+  <script src="site_media/js/SarryGE.js" type="text/javascript"></script>
+  <script src="site_media/js/jquery-ui-1.8.5.custom.min.js" type="text/javascript"></script>
+  <link rel="stylesheet" href="site_media/css/SarryGE.css" type="text/css" />
+  <link rel="stylesheet" href="site_media/css/themes/base/jquery.ui.all.css" />
+  <script type="text/javascript">
+function showKMZ(obj, path)
+{
+  var link = SarryGE.ge.createLink('');
+  link.setHref('http://localhost:8000/' + path);
+  link.setRefreshMode(SarryGE.ge.REFRESH_ON_EXPIRE);
+
+  if(obj.dataLink)
+    SarryGE.ge.getFeatures().removeChild(obj.dataLink);
+
+  obj.dataLink = SarryGE.ge.createNetworkLink('');
+  obj.dataLink.setLink(link);
+  obj.dataLink.setFlyToView(true);
+  SarryGE.ge.getFeatures().appendChild(obj.dataLink);
+}
+
+function set_selection(elem)
+{
+  $('.startal_selected').addClass('startal_unselected');
+  $('.startal_selected').removeClass('startal_selected');
+  elem.parent().removeClass('startal_unselected')
+  elem.parent().addClass('startal_selected')
+}
+
+$(function() {
+  $('div.dataViewer').tabs(
+  {
+    cache: false,
+    ajaxOptions: { cache: false }
+  });
+
+  SarryGE.init('map3d',
+    function(ptUL, ptUR, ptLR, ptLL)
+    {
+      //TODO: Specify the url in a single place.
+      $.ajax({url: 'http://localhost:8000/add_roi/'
+        + ptUL.getLatitude() + '/' + ptUL.getLongitude() + '/'
+        + ptUR.getLatitude() + '/' + ptUR.getLongitude() + '/'
+        + ptLR.getLatitude() + '/' + ptLR.getLongitude() + '/'
+        + ptLL.getLatitude() + '/' + ptLL.getLongitude() + '/',
+        success: function(a,b,c) {
+          var idx = $('div.dataViewer').tabs('option', 'selected');
+          $('div.dataViewer').bind('tabsload.ge', function(event,ui) {
+            $('div.dataViewer').unbind('tabsload.ge');
+            $('div.dataViewer').tabs('select', idx);
+
+            var lastEntry = $('#roiList').children().last();
+            lastEntry.children().first().click();
+          });
+
+          $('div.dataViewer').tabs('load', idx);
+
+        },});
+    });
+});
+
+</script>
+</head>
+
+<body>
+<div class="earthViewer">
+  <div id="map3d"></div>
+</div>
+<div class="dataViewer">
+  <ul>
+    <li><a href="/elevation_tab/">Elevation Data</a></li>
+    <li><a href="/sar_data_tab/">SAR Data</a></li>
+    <li><a href="/roi_tab/">Regions of Interest</a></li>
+    <li><a href="/task_tab/">Processing Tasks</a></li>
+  </ul>
+</div>
+</body>
+</html>

@@ -1,0 +1,48 @@
+.earthViewer { width: 100%; }
+.dataViewer { width: 100%; }
+#map3d { width: 100%; height:50%; }
+#buttons { text-align: center; }
+.computer { font-family: monospace; font-size: 80%; }
+.subLinks { text-align: center; font-size: 60%; }
+.startal_selectable li
+{
+  cursor: pointer;
+  list-style-type: none;
+  margin: 3px;
+  padding: 5px;
+  width: 150px;
+  height: 180px;
+  float: left;
+  position: relative;
+}
+.startal_selectable li img
+{
+  display: block;
+  margin-left: auto;
+  margin-right: auto;
+}
+
+.startal_caption
+{
+  width: 100%;
+  text-align: center;
+  color: white;
+  text-decoration: none;
+  font-size: 60%;
+}
+
+.startal_unselected { background-color: #555; }
+.startal_selected { background-color: #F39814; }
+input[type="text"], textarea { width: 90%; }
+
+.task_roi
+{
+  cursor: pointer;
+  float: left;
+  padding: 5px;
+  margin: 3px;
+}
+
+.task_roi_unselected { background-color: #555; }
+.task_roi_selected { background-color: #F39814; }
+

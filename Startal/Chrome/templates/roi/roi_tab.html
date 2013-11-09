@@ -1,0 +1,57 @@
+<div id="roiViewer">
+  <p>Use ALT + Left Drag on the Earth View to Create a Region of Interest</p>
+  {% if roi_list %}
+    <ul id="roiList" class="startal_selectable">
+    {% for roi in roi_list %}
+      <li class="startal_unselected">
+        <img class="roi_show" src="{{roi.static_image_url}}"
+            alt="{{ roi.id }}: Centered at {{ roi.center_point }}" />
+        <div class="roi_remove startal_caption">remove</div>
+        <input type="hidden" name="roi_id" value="{{roi.id}}" />
+      </li>
+    {% endfor %}
+    </ul>
+  {% else %}
+    <p>No Regions of Interest Registered.</p>
+  {%endif%}
+  <div style="clear: both;"></div>
+</div>
+<script type="text/javascript">
+
+function showRoi(event, elem, Roi)
+{
+  set_selection(elem);
+
+  var roi_id = elem.siblings("input[name='roi_id']").attr('value');
+  showKMZ(Roi, 'rois/' + roi_id + '/');
+
+  event.preventDefault();
+}
+
+function removeRoi(event, elem, Roi)
+{
+  //Even if we're removing a roi that's not selected, we act like this
+  // was selected and then removed.
+  if(Roi.dataLink)
+    SarryGE.ge.getFeatures().removeChild(Roi.dataLink);
+
+  var roi_id = elem.siblings("input[name='roi_id']").attr('value');
+  $.ajax({url: 'http://localhost:8000/remove_roi/'+ roi_id +'/',
+          success: function(a,b,c) {
+            var idx = $('div.dataViewer').tabs('option', 'selected');
+            $('div.dataViewer').tabs('load', idx);
+          },});
+  event.preventDefault();
+}
+
+var Roi;
+if(!Roi)
+  Roi = { dataLink: false };
+$(function() { 
+
+  $('.roi_remove').click(function(event){removeRoi(event, $(this), Roi);});
+  $('.roi_show').click(function(event){showRoi(event, $(this), Roi);});
+
+});
+
+</script>
